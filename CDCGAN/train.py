@@ -27,7 +27,8 @@ def parse_arguments():
     )
     parser.add_argument("--ngf", type=int, default=64)
     parser.add_argument("--ndf", type=int, default=64)
-    parser.add_argument("--batchSize", type=int, default=32, help="input batch size")
+    parser.add_argument("--batchSize", type=int,
+                        default=32, help="input batch size")
     parser.add_argument(
         "--niter", type=int, default=5000, help="number of epochs to train for"
     )
@@ -47,7 +48,8 @@ def parse_arguments():
         "--beta1", type=float, default=0.5, help="beta1 for adam. default=0.5"
     )
     parser.add_argument("--cuda", action="store_true", help="enables cuda")
-    parser.add_argument("--ngpu", type=int, default=1, help="number of GPUs to use")
+    parser.add_argument("--ngpu", type=int, default=1,
+                        help="number of GPUs to use")
     parser.add_argument(
         "--netG", default="", help="path to netG (to continue training)"
     )
@@ -72,7 +74,8 @@ def parse_arguments():
     parser.add_argument(
         "--adam", action="store_true", help="Whether to use adam (default is rmsprop)"
     )
-    parser.add_argument("--problem", type=int, default=0, help="Level examples")
+    parser.add_argument("--problem", type=int,
+                        default=0, help="Level examples")
     opt = parser.parse_args()
     return opt
 
@@ -110,7 +113,7 @@ def combine_images(generated_images):
         i = int(index / width)
         j = index % width
         image[
-            i * shape[0] : (i + 1) * shape[0], j * shape[1] : (j + 1) * shape[1]
+            i * shape[0]: (i + 1) * shape[0], j * shape[1]: (j + 1) * shape[1]
         ] = img
     return image
 
@@ -121,11 +124,12 @@ def train(
     '''
     netG: generator
     netD: discrimminator
-    org_data:
+    org_data: from MarioDataset()
     opt: whether using cuda
-    nz: 
-    map_size
-    
+    nz: 14 * 32 * 32,
+    map_size: 32
+    batchsize: default 32
+
     '''
     input = torch.FloatTensor(opt.batchSize, z_dims, map_size, map_size)
     noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
@@ -143,8 +147,10 @@ def train(
 
     # setup optimizer
     if opt.adam:
-        optimizerD = optim.Adam(netD.parameters(), lr=opt.lrD, betas=(opt.beta1, 0.999))
-        optimizerG = optim.Adam(netG.parameters(), lr=opt.lrG, betas=(opt.beta1, 0.999))
+        optimizerD = optim.Adam(
+            netD.parameters(), lr=opt.lrD, betas=(opt.beta1, 0.999))
+        optimizerG = optim.Adam(
+            netG.parameters(), lr=opt.lrG, betas=(opt.beta1, 0.999))
         print("Using ADAM")
     else:
         optimizerD = optim.RMSprop(netD.parameters(), lr=opt.lrD)
@@ -167,7 +173,7 @@ def train(
 
             # train the discriminator Diters times
             if gen_iterations < 25 or gen_iterations % 500 == 0:
-                Diters = 100 
+                Diters = 100
             else:
                 Diters = opt.Diters
             j = 0
@@ -180,8 +186,8 @@ def train(
                     p.data.clamp_(opt.clamp_lower, opt.clamp_upper)
 
                 batch_data = org_data[
-                    data_idx[i * opt.batchSize : (i + 1) * opt.batchSize]
-                ] # organize the data
+                    data_idx[i * opt.batchSize: (i + 1) * opt.batchSize]
+                ]  # organize the data
 
                 i += 1
                 context_frame, out_frame = (batch_data[0], batch_data[1])
@@ -190,10 +196,12 @@ def train(
                     # im = data.cpu().numpy()
                     print(batch_data.shape)
                     real_cpu = combine_images(
-                        tiles2image(np.argmax(batch_data, axis=1), z_dims=z_dims)
+                        tiles2image(np.argmax(batch_data, axis=1),
+                                    z_dims=z_dims)
                     )
                     print(real_cpu)
-                    plt.imsave("{0}/real_samples.png".format(opt.experiment), real_cpu)
+                    plt.imsave(
+                        "{0}/real_samples.png".format(opt.experiment), real_cpu)
                     exit()
 
                 netD.zero_grad()
@@ -203,11 +211,12 @@ def train(
                     context_frame.cuda(), out_frame.cuda()
                 joined_frame = torch.cat((context_frame, out_frame), dim=3)
                 assert joined_frame[0].shape == (13, 32, 32)
-                input.resize_as_(joined_frame).copy_(joined_frame) # input are all zeros
-                inputv = Variable(input) # make input as variables wrt loss
+                input.resize_as_(joined_frame).copy_(
+                    joined_frame)  # input are all zeros
+                inputv = Variable(input)  # make input as variables wrt loss
 
                 errD_real = netD(inputv).mean(0).view(1)
-                errD_real.backward(one)
+                errD_real.backward(one)  # What is the error here?
 
                 # train with fake
                 noise.resize_(opt.batchSize, 1, 14, 14).normal_(0, 1)
@@ -215,25 +224,30 @@ def train(
                 ref_idx = torch.randperm(len(org_data))[: opt.batchSize]
                 ref_frames = org_data[ref_idx].prev_frame
                 gen_input = torch.cat(
-                    (noise, ref_frames[:, conditional_channels, 9:-9, 2:]), dim=1
+                    (noise, ref_frames[:,
+                     conditional_channels, 9:-9, 2:]), dim=1
                 )
                 # gen_input = ref_frames[:, :, 9:-9, 2:]
 
-                noisev = Variable(gen_input, volatile=True)  # totally freeze netG
-                fake = Variable(netG(noisev).data)
+                # totally freeze netG
+                noisev = Variable(gen_input, volatile=True)
+                fake = Variable(netG(noisev).data)  # generated data from netG?
                 stitched = torch.cat(
                     (ref_frames, fake[:, :, :, 16:]), dim=3
                 )  # stitch the context frame
                 assert stitched[0].shape == (13, 32, 32)
                 inputv = stitched
-                errD_fake = netD(inputv).mean(0).view(1)
+                errD_fake = netD(inputv).mean(0).view(
+                    1)  # What is the error here?
                 errD_fake.backward(mone)
-                errD = errD_real - errD_fake
+                errD = errD_real - errD_fake  # Why? to see if the error changes
                 optimizerD.step()
 
             ############################
             # (2) Update G network
             ###########################
+
+            # For each batch
             for p in netD.parameters():
                 p.requires_grad = False  # Freeze netD, to avoid computation
             netG.zero_grad()
@@ -272,13 +286,16 @@ def train(
                     errD_fake.data[0],
                 )
             )
+
+            # What is this part doing?
             if gen_iterations % 10000 == 0:  # was 500
                 with torch.no_grad():
                     fixed_noise.resize_(opt.batchSize, 1, 14, 14)
                     ref_idx = torch.randperm(len(org_data))[: opt.batchSize]
                     ref_frames = org_data[ref_idx].prev_frame
                     gen_input = torch.cat(
-                        (fixed_noise, ref_frames[:, conditional_channels, 9:-9, 2:]),
+                        (fixed_noise,
+                         ref_frames[:, conditional_channels, 9:-9, 2:]),
                         dim=1,
                     )
                     # gen_input = ref_frames[:, :, 9:-9, 2:]
@@ -289,7 +306,8 @@ def train(
                 # print('SHAPE fake',type(im), im.shape)
                 # print('SUM ',np.sum( im, axis = 1) )
 
-                im = combine_images(tiles2image(np.argmax(im, axis=1), z_dims=13))
+                im = combine_images(tiles2image(
+                    np.argmax(im, axis=1), z_dims=13))
                 plt.imsave(
                     "{0}/mario_fake_samples_{1}.png".format(
                         opt.experiment, gen_iterations
@@ -327,7 +345,8 @@ def main():
 
     map_size = 32
     data = MarioDataset()
-    conditional_channels = [0, 1, 6, 7]  # channels on which generator is conditioned on
+    # channels on which generator is conditioned on
+    conditional_channels = [0, 1, 6, 7]
 
     ngpu = int(opt.ngpu)
     nz = int(opt.nz)
