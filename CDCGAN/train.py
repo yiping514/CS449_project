@@ -124,16 +124,18 @@ def train(
     '''
     netG: generator
     netD: discrimminator
-    org_data: from MarioDataset()
+    org_data: from MarioDataset(), size = (2488,13,32,32), where (2488,13,9:-9, 2:-2) is the onehot encoding and others are zeros
     opt: whether using cuda
     nz: 14 * 32 * 32,
+    z_dim: number of mapped symbols (tile types)
     map_size: 32
     batchsize: default 32
 
+    The condition of the DCGAN is the previous frame
     '''
     input = torch.FloatTensor(opt.batchSize, z_dims, map_size, map_size)
     noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
-    fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1)
+    fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1) # fill the tensor with elements samples from the normal distribution
     one = torch.FloatTensor([1])
     mone = one * -1
 
@@ -173,7 +175,7 @@ def train(
 
             # train the discriminator Diters times
             if gen_iterations < 25 or gen_iterations % 500 == 0:
-                Diters = 100
+                Diters = 100 # what is Diter for? 
             else:
                 Diters = opt.Diters
             j = 0
@@ -183,11 +185,12 @@ def train(
                 # clamp parameters to a cube
                 for p in netD.parameters():
                     # the value < lb will be replaced by lb and > ub by ub
+                    # why do they add this? 
                     p.data.clamp_(opt.clamp_lower, opt.clamp_upper)
 
                 batch_data = org_data[
                     data_idx[i * opt.batchSize: (i + 1) * opt.batchSize]
-                ]  # organize the data
+                ]  # generate batch data from original dataset
 
                 i += 1
                 context_frame, out_frame = (batch_data[0], batch_data[1])
@@ -210,37 +213,38 @@ def train(
                 if opt.cuda:
                     context_frame.cuda(), out_frame.cuda()
                 joined_frame = torch.cat((context_frame, out_frame), dim=3)
-                assert joined_frame[0].shape == (13, 32, 32)
+                assert joined_frame[0].shape == (13, 32, 32) # the size of every joined_frame (for a single level) is (13,32,32)
                 input.resize_as_(joined_frame).copy_(
-                    joined_frame)  # input are all zeros
+                    joined_frame)  
                 inputv = Variable(input)  # make input as variables wrt loss
 
-                errD_real = netD(inputv).mean(0).view(1)
-                errD_real.backward(one)  # What is the error here?
+                errD_real = netD(inputv).mean(0).view(1) # forward the batch sample through netD and get error: the corresponding label shoule be "real"
+                errD_real.backward(one)  
 
                 # train with fake
-                noise.resize_(opt.batchSize, 1, 14, 14).normal_(0, 1)
+                noise.resize_(opt.batchSize, 1, 14, 14).normal_(0, 1) 
 
                 ref_idx = torch.randperm(len(org_data))[: opt.batchSize]
-                ref_frames = org_data[ref_idx].prev_frame
+                ref_frames = org_data[ref_idx].prev_frame # only take take out the first half of the frame
                 gen_input = torch.cat(
                     (noise, ref_frames[:,
-                     conditional_channels, 9:-9, 2:]), dim=1
-                )
+                     conditional_channels, 9:-9, 2:]), dim=1 # conditional channel = [0,1,6,7]
+                ) 
+                # gen_input.size() = [opt.batchSize,5,14,14]
                 # gen_input = ref_frames[:, :, 9:-9, 2:]
 
                 # totally freeze netG
                 noisev = Variable(gen_input, volatile=True)
-                fake = Variable(netG(noisev).data)  # generated data from netG?
+                fake = Variable(netG(noisev).data)  # generated latent variables from netG, **size = (batchSize,?,32,32)
                 stitched = torch.cat(
                     (ref_frames, fake[:, :, :, 16:]), dim=3
-                )  # stitch the context frame
+                )  # stitch the first half and the generated fake second have together
                 assert stitched[0].shape == (13, 32, 32)
                 inputv = stitched
                 errD_fake = netD(inputv).mean(0).view(
-                    1)  # What is the error here?
-                errD_fake.backward(mone)
-                errD = errD_real - errD_fake  # Why? to see if the error changes
+                    1)  # tell netD this is the fake one.
+                errD_fake.backward(mone) # get gradient for the fake data. mone is to tell netD this is the fake model
+                errD = errD_real - errD_fake  # To track error difference
                 optimizerD.step()
 
             ############################
@@ -271,7 +275,7 @@ def train(
             errG.backward(one)
             optimizerG.step()
             gen_iterations += 1
-
+            # 0430/2023
             print(
                 "[%d/%d][%d/%d][%d] Loss_D: %f Loss_G: %f Loss_D_real: %f Loss_D_fake %f"
                 % (
