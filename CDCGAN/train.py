@@ -100,7 +100,7 @@ def tiles2image(tiles, z_dims):
 
 def combine_images(generated_images):
     '''
-    what is the format of generated_images?
+    the generated_images is the output of tiles2image
     '''
     num = generated_images.shape[0]
     width = int(math.sqrt(num))
@@ -135,7 +135,8 @@ def train(
     '''
     input = torch.FloatTensor(opt.batchSize, z_dims, map_size, map_size)
     noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
-    fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1) # fill the tensor with elements samples from the normal distribution
+    # fill the tensor with elements samples from the normal distribution
+    fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1)
     one = torch.FloatTensor([1])
     mone = one * -1
 
@@ -175,7 +176,7 @@ def train(
 
             # train the discriminator Diters times
             if gen_iterations < 25 or gen_iterations % 500 == 0:
-                Diters = 100 # what is Diter for? 
+                Diters = 100  # what is Diter for?
             else:
                 Diters = opt.Diters
             j = 0
@@ -185,7 +186,7 @@ def train(
                 # clamp parameters to a cube
                 for p in netD.parameters():
                     # the value < lb will be replaced by lb and > ub by ub
-                    # why do they add this? 
+                    # why do they add this?
                     p.data.clamp_(opt.clamp_lower, opt.clamp_upper)
 
                 batch_data = org_data[
@@ -213,29 +214,33 @@ def train(
                 if opt.cuda:
                     context_frame.cuda(), out_frame.cuda()
                 joined_frame = torch.cat((context_frame, out_frame), dim=3)
-                assert joined_frame[0].shape == (13, 32, 32) # the size of every joined_frame (for a single level) is (13,32,32)
+                # the size of every joined_frame (for a single level) is (13,32,32)
+                assert joined_frame[0].shape == (13, 32, 32)
                 input.resize_as_(joined_frame).copy_(
-                    joined_frame)  
+                    joined_frame)
                 inputv = Variable(input)  # make input as variables wrt loss
 
-                errD_real = netD(inputv).mean(0).view(1) # forward the batch sample through netD and get error: the corresponding label shoule be "real"
-                errD_real.backward(one)  
+                # forward the batch sample through netD and get error: the corresponding label shoule be "real"
+                errD_real = netD(inputv).mean(0).view(1)
+                errD_real.backward(one)
 
                 # train with fake
-                noise.resize_(opt.batchSize, 1, 14, 14).normal_(0, 1) 
+                noise.resize_(opt.batchSize, 1, 14, 14).normal_(0, 1)
 
                 ref_idx = torch.randperm(len(org_data))[: opt.batchSize]
-                ref_frames = org_data[ref_idx].prev_frame # only take take out the first half of the frame
+                # only take take out the first half of the frame
+                ref_frames = org_data[ref_idx].prev_frame
                 gen_input = torch.cat(
                     (noise, ref_frames[:,
-                     conditional_channels, 9:-9, 2:]), dim=1 # conditional channel = [0,1,6,7]
-                ) 
+                     conditional_channels, 9:-9, 2:]), dim=1  # conditional channel = [0,1,6,7]
+                )
                 # gen_input.size() = [opt.batchSize,5,14,14]
                 # gen_input = ref_frames[:, :, 9:-9, 2:]
 
                 # totally freeze netG
                 noisev = Variable(gen_input, volatile=True)
-                fake = Variable(netG(noisev).data)  # generated latent variables from netG, **size = (batchSize,?,32,32)
+                # generated latent variables from netG, **size = (batchSize,?,32,32)
+                fake = Variable(netG(noisev).data)
                 stitched = torch.cat(
                     (ref_frames, fake[:, :, :, 16:]), dim=3
                 )  # stitch the first half and the generated fake second have together
@@ -243,7 +248,8 @@ def train(
                 inputv = stitched
                 errD_fake = netD(inputv).mean(0).view(
                     1)  # tell netD this is the fake one.
-                errD_fake.backward(mone) # get gradient for the fake data. mone is to tell netD this is the fake model
+                # get gradient for the fake data. mone is to tell netD this is the fake model
+                errD_fake.backward(mone)
                 errD = errD_real - errD_fake  # To track error difference
                 optimizerD.step()
 
@@ -293,6 +299,7 @@ def train(
 
             # What is this part doing?
             if gen_iterations % 10000 == 0:  # was 500
+                # iteration through 10000 batches
                 with torch.no_grad():
                     fixed_noise.resize_(opt.batchSize, 1, 14, 14)
                     ref_idx = torch.randperm(len(org_data))[: opt.batchSize]
@@ -306,12 +313,12 @@ def train(
                     fake = netG(Variable(gen_input, volatile=True))
                 stitched = torch.cat((ref_frames, fake[:, :, :, 16:]), dim=3)
                 im = stitched.data.cpu().numpy()
-                im = im[:, :, 9:-9, 1:-2]
+                im = im[:, :, 9:-9, 1:-2]  # why -1:2 not -2:2
                 # print('SHAPE fake',type(im), im.shape)
                 # print('SUM ',np.sum( im, axis = 1) )
 
                 im = combine_images(tiles2image(
-                    np.argmax(im, axis=1), z_dims=13))
+                    np.argmax(im, axis=1), z_dims=13))  # why argmax?
                 plt.imsave(
                     "{0}/mario_fake_samples_{1}.png".format(
                         opt.experiment, gen_iterations
@@ -363,6 +370,7 @@ def main():
     netG = Generator(
         latent_size=(len(conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
     )
+    # what does the latent size means? the dimension of the inputs
     print(netG)
     # netG.apply(weights_init)
     # if opt.netG != "":  # load checkpoint if needed

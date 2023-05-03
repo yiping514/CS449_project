@@ -40,14 +40,16 @@ class GetLevel:
         for i in range(frame_count):
             noise = noise_dis.sample().reshape((1, 1, 14, 14))
             gen_input = torch.cat(
-                (noise, self.prev_frame[:, self.conditional_channels, 9:-9, 2:]), dim=1
+                (noise, self.prev_frame[:,
+                 self.conditional_channels, 9:-9, 2:]), dim=1
             )
 
             fake = self.netG(gen_input).data
             stitched = torch.cat(
                 (self.prev_frame, fake[:, :, :, 16:]), dim=3
             )  # stitch the context frame
-            level_frame = fake[:, :, 9:-9, 16:-2].data.cpu().numpy()  # without padding
+            level_frame = fake[:, :, 9:-9, 16:-
+                               2].data.cpu().numpy()  # without padding
             self.prev_frame = torch.cat(
                 (self.curr_frame[:, :, :, -2:], fake[:, :, :, 16:-2]), dim=3
             )  # with padding added to front
@@ -88,7 +90,8 @@ if __name__ == "__main__":
     netG = Generator(
         latent_size=(len(conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
     )
-    netG.load_state_dict(torch.load("./trained_models/netG_epoch_300000_0_32.pth"))
+    netG.load_state_dict(torch.load(
+        "./trained_models/netG_epoch_300000_0_32.pth"))
     # 300000
     mario_map = get_asset_map(game="mario")
     gen = GameImageGenerator(asset_map=mario_map)
@@ -109,13 +112,15 @@ if __name__ == "__main__":
         stitched = torch.cat(
             (prev_frame, fake[:, :, :, 16:]), dim=3
         )  # stitch the context frame
-        level_frame = fake[:, :, 9:-9, 16:-2].data.cpu().numpy()  # without padding
+        level_frame = fake[:, :, 9:-9, 16:-
+                           2].data.cpu().numpy()  # without padding
         prev_frame = torch.cat(
             (curr_frame[:, :, :, -2:], fake[:, :, :, 16:-2]), dim=3
         )  # with padding added to front
 
         if full_level is None:
-            stitched = np.argmax(stitched[:, :, 9:-9, 2:-2].data.cpu().numpy(), axis=1)
+            stitched = np.argmax(
+                stitched[:, :, 9:-9, 2:-2].data.cpu().numpy(), axis=1)
             full_level = stitched[0]
         else:
             level_frame = np.argmax(level_frame, axis=1)
