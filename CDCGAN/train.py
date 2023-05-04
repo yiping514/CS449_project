@@ -238,7 +238,7 @@ def train(
                 # gen_input = ref_frames[:, :, 9:-9, 2:]
 
                 # totally freeze netG
-                noisev = Variable(gen_input, volatile=True)
+                noisev = Variable(gen_input, volatile=True) # what is volatile=True?
                 # generated latent variables from netG, **size = (batchSize,?,32,32)
                 fake = Variable(netG(noisev).data)
                 stitched = torch.cat(
