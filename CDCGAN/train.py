@@ -30,7 +30,7 @@ def parse_arguments():
     parser.add_argument("--batchSize", type=int,
                         default=32, help="input batch size")
     parser.add_argument(
-        "--niter", type=int, default=5000, help="number of epochs to train for"
+        "--niter", type=int, default=10000, help="number of epochs to train for"
     )
     parser.add_argument(
         "--lrD",
@@ -320,14 +320,14 @@ def train(
                 im = combine_images(tiles2image(
                     np.argmax(im, axis=1), z_dims=13))  # why argmax?
                 plt.imsave(
-                    "{0}/mario_fake_samples_{1}.png".format(
+                    "{0}/mario_fake_samples_condition_all_channel{1}.png".format(
                         opt.experiment, gen_iterations
                     ),
                     im,
                 )
                 torch.save(
                     netG.state_dict(),
-                    "{0}/netG_epoch_{1}_{2}_{3}.pth".format(
+                    "{0}/netG_epoch_condition_all_channel{1}_{2}_{3}.pth".format(
                         opt.experiment, gen_iterations, opt.problem, opt.nz
                     ),
                 )
@@ -357,7 +357,7 @@ def main():
     map_size = 32
     data = MarioDataset()
     # channels on which generator is conditioned on
-    conditional_channels = [0, 1, 6, 7]
+    conditional_channels = [0, 1,2,3,4,5, 6, 7,8,9,10,11,12]
 
     ngpu = int(opt.ngpu)
     nz = int(opt.nz)
