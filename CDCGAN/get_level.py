@@ -91,7 +91,7 @@ if __name__ == "__main__":
         latent_size=(len(conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
     )
     netG.load_state_dict(torch.load(
-        "./trained_models/netG_epoch_300000_0_32.pth"))
+        "./trained_models/netG_epoch_70000_0_32.pth"))
     # 300000
     mario_map = get_asset_map(game="mario")
     gen = GameImageGenerator(asset_map=mario_map)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     fixer = PipeFixer()
     full_level = None
 
-    for i in range(30):
+    for i in range(5):
 
         noise = torch.rand((1, 1, 14, 14)).normal_(0, 1)
 

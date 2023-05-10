@@ -28,7 +28,8 @@ class Generator(nn.Module):
             # nn.Linear(in_features=100, out_features=64),
             # nn.ReLU(),
         )
-        self.generator = DCGANGenerator(latent_size=(100, 1, 1), output_size=out_size)
+        self.generator = DCGANGenerator(
+            latent_size=(100, 1, 1), output_size=out_size)
 
     def forward(self, z):
         features = self.feature_embedd(z)
