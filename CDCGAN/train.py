@@ -30,7 +30,7 @@ def parse_arguments():
     parser.add_argument("--batchSize", type=int,
                         default=32, help="input batch size")
     parser.add_argument(
-        "--niter", type=int, default=30000, help="number of epochs to train for"
+        "--niter", type=int, default=10000, help="number of epochs to train for"
     )
     parser.add_argument(
         "--lrD",
@@ -298,6 +298,10 @@ def train(
                 )
             )
 
+            # np.savetxt("Loss_D.csv", np.asarray(errD.data[0]), delimiter = ",")
+            # np.savetxt("Loss_G.csv", np.asarray(errG.data[0]), delimiter = ",")
+            # np.savetxt("Loss_D_real.csv", np.asarray(errD_real.data[0]), delimiter = ",")
+            # np.savetxt("Loss_D_fake.csv", np.asarray(errD_fake.data[0]), delimiter = ",")
 
             # What is this part doing?
             if gen_iterations % 10000 == 0:  # was 500
