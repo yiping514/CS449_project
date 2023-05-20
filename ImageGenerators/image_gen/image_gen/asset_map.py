@@ -11,4 +11,3 @@ def get_asset_map(game="mario"):
         asset_map = pickle.load(fp)
 
     return asset_map
-

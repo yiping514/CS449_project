@@ -80,18 +80,13 @@ class GetLevel:
 
 
 if __name__ == "__main__":
-    conditional_channels = [
-        0,
-        1,
-        6,
-        7,
-    ]  # channels on which generator is conditioned on
+    conditional_channels = [0,1,3,4,5,6,7,10,11,12]  # channels on which generator is conditioned on
     dataset = MarioDataset()
     netG = Generator(
         latent_size=(len(conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
     )
     netG.load_state_dict(torch.load(
-        "./trained_models/netG_epoch_300000_0_32.pth"))
+        "./trained_models/netG_epoch_condition_1_240000_0_32.pth"))
     # 300000
     mario_map = get_asset_map(game="mario")
     gen = GameImageGenerator(asset_map=mario_map)
@@ -100,7 +95,7 @@ if __name__ == "__main__":
     fixer = PipeFixer()
     full_level = None
 
-    for i in range(30):
+    for i in range(5):
 
         noise = torch.rand((1, 1, 14, 14)).normal_(0, 1)
 
