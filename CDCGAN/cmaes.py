@@ -12,7 +12,7 @@ class SimpleCMAES:
         self.sigma = standard_deviation
         self.mean = (
             mean if mean is not None else np.random.random_sample(noise_size).flatten()
-        )
+        ) # generate mean vector by a random_sample where the size is a flatten(14*14)
         self.populations = []
         self.best_solution = self.mean
         self.reset()
@@ -25,6 +25,8 @@ class SimpleCMAES:
 
     def get_pop_noise(self):
         self.populations = self.es.ask()
+        #get new candidate solutions, sampled from a multi-variate normal distribution and transformed to f-representation (phenotype) to be evaluated.
+        
         # print(self.populations)
         # print("in get noise")
         # tmp = input()
