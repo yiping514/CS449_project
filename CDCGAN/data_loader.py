@@ -34,7 +34,6 @@ class MarioDataset(Dataset):
         onehot = np.eye(z_dims, dtype="uint8")[
             levels
         ]  # create a one hot mapping for the features
-        print(levels)
         onehot = np.rollaxis(onehot, 3, 1)  # (num_samples, chann.=13, h=14, w=28)
         padded = np.full((onehot.shape[0], onehot.shape[1], 32, 32), 0.0)
         padded[:, :, 9:-9, 2:-2] = onehot
