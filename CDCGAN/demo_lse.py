@@ -8,7 +8,7 @@ from cursesmenu import CursesMenu, SelectionMenu
 import numpy as np
 import torch
 
-torch.manual_seed(75)
+torch.manual_seed(1)
 
 
 if __name__ == "__main__":
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "trained_models/netG_epoch_300000_0_32.pth"))
     mario_map = get_asset_map(game="mario")
     gen = GameImageGenerator(asset_map=mario_map)
-    prev_frame, curr_frame = dataset[[120]]  # 51
+    prev_frame, curr_frame = dataset[[51]]  # 51
     fixer = PipeFixer()
     level_gen = getLevel(netG, gen, fixer, prev_frame,
                          curr_frame, conditional_channels)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         var = 0.07 if selection != 2 else 1.0
         try:
             noise = noise_params[selection]
-            level = level_gen.generate_frames(noise, var=var, frame_count=6)
+            level = level_gen.generate_frames(noise, var=var, frame_count=1)
             level_gen.gen.save_gen_level(img_name="lse_demo")
         except IndexError:
             break
