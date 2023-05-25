@@ -33,7 +33,8 @@ if __name__ == "__main__":
 
     noise_params = (
         np.load("underground_params.npy"),
-        np.load("best_sky_tile_member.npy"),
+        #np.load("best_sky_tile_member.npy"),
+        np.load("best_member.npy"),
         np.zeros((196,)),
     )
     features = ["Underground Level", "More Sky Tiles", "Random Noise"]
@@ -42,10 +43,10 @@ if __name__ == "__main__":
         selection = SelectionMenu.get_selection(
             features, title="Select the features you would like to generate:",
         )
-        var = 0.07 if selection != 2 else 1.0
+        var = 0.07 if selection != 2 else 0.07
         try:
             noise = noise_params[selection]
             level = level_gen.generate_frames(noise, var=var, frame_count=1)
-            level_gen.gen.save_gen_level(img_name="lse_demo")
+            level_gen.gen.save_gen_level(img_name="lse_demo_mine")
         except IndexError:
             break

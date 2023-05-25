@@ -98,7 +98,7 @@ def evaluate_kl(ori_lvl, gen_lvl):
 
 if __name__ == "__main__":
     samples_per_member = 5
-    population_size = 100
+    population_size = 1000
     conditional_channels = [
         0,
         1,
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     best_member = None
 
     ori_lvl = LevelInfo(fmt="txt", name="sky_level", path="")
-    while count <= 200:
+    while count <= 1000:
         populated_noises = lse.get_pop_noise()
         fitnesses = []
         for noise in tqdm(populated_noises, desc=f"{count}: evaluating fitness"):
@@ -160,7 +160,7 @@ if __name__ == "__main__":
             lse.reset(mean=s.flatten())
 
         # save every 5 steps
-        if count % 10 == 0:
+        if count % 100 == 0:
             level_gen.reset()
             full_level = level_gen.generate_frames(s.flatten(), var=0.07)
 
@@ -170,7 +170,7 @@ if __name__ == "__main__":
             level_gen.gen.save_gen_level(img_name=image_name)
             write_row([s])
 
-        if count % 10 == 0:
+        if count % 100 == 0:
             lse.plot_cma(dir_path=dir_path, count=count)
 
         count = count + 1
