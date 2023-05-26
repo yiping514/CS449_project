@@ -30,7 +30,6 @@ class MarioDataset(Dataset):
     def prep_dataset(self, file, z_dims):
         with open(file, "r") as fp:
             levels = np.array(json.load(fp))
-
         onehot = np.eye(z_dims, dtype="uint8")[
             levels
         ]  # create a one hot mapping for the features

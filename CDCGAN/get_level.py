@@ -122,8 +122,8 @@ if __name__ == "__main__":
             full_level = np.concatenate((full_level, level_frame[0]), axis=1)
 
         full_level = fixer.fix(full_level)
-    np.set_printoptions(threshold=np.inf)
-    print(full_level)
+    #np.set_printoptions(threshold=np.inf)
+    #print(full_level)
     gen.render(image_array=full_level, sprite_dims=(16, 16))
     gen.save_gen_level(img_name="trial_level")
     # time.sleep(2)
