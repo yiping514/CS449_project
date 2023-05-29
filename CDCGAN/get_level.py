@@ -1,6 +1,7 @@
 import os
 import pickle
 import time
+import struct
 
 import numpy as np
 import torch
@@ -73,10 +74,32 @@ class GetLevel:
 
         return self.full_level
 
-    def save_full_level(self, file_name="full_level"):
+    def save_full_level(self, file_name="full_level"): #file_name="full_level"
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name + ".pkl", "wb") as fp:
             pickle.dump(self.full_level, fp)
+
+    def save_full_level_pkl(self, file_name):
+        with open(file_name + ".pkl","wb") as file:
+            pickle.dump(self.full_level,file)
+
+    def save_full_level_rom(self,file_name):
+        matrix = self.full_level[1:,:]
+        print(matrix)
+        header = file_name
+        rows = len(matrix[:,1])
+        columns = len(matrix[0,:])
+        print("row", rows, "column", columns)
+        data_format = "i"
+
+        with open(file_name + ".rom", "wb") as file:
+            file.write(header.encode())
+            file.write(struct.pack('I', rows))
+            file.write(struct.pack('I', columns))
+
+            for row in matrix:
+                 for element in row:
+                     file.write(struct.pack(data_format, element))
 
 
 if __name__ == "__main__":

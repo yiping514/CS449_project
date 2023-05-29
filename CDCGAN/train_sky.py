@@ -19,7 +19,7 @@ from torchfusion.gan.applications import DCGANDiscriminator
 from data_loader import MarioDataset
 from models.custom import Generator
 
-from additional_cond import count_sky_tiles count_ground_tiles
+from additional_cond import count_sky_tiles, count_ground_tiles
 
 
 # Run with "python main.py"

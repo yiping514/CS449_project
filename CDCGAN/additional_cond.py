@@ -31,7 +31,7 @@ def count_ground_tiles(joined_frame):
     num_total_enemies = np.sum(np.sum(np.logical_or(level == 5, level == 11, level == 12),axis=1),axis=1)
     
     fitness = -(num_sky_tiles) + num_ground_tiles - 10*num_total_enemies
-    true = np.where(fitness>=5)
-    false = np.where(fitness < 5)
+    true = np.where(np.logical_and(fitness>=5, num_ground_tiles <= 26))
+    false = np.where(np.logical_or(fitness < 5, num_ground_tiles > 26))
 
     return true, false
