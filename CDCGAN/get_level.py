@@ -101,6 +101,11 @@ class GetLevel:
                  for element in row:
                      file.write(struct.pack(data_format, element))
 
+    def save_full_level_np(self,file_name):
+        matrix = self.full_level
+        np.save(file_name+"14"+".npy", matrix)
+        matrix = matrix[1:,:]
+        np.save(file_name+"13"+".npy", self.full_level)
 
 if __name__ == "__main__":
     conditional_channels = [0,1,2,5,6,7]  # channels on which generator is conditioned on
