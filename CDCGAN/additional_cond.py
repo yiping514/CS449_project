@@ -35,3 +35,14 @@ def count_ground_tiles(joined_frame):
     false = np.where(np.logical_or(fitness < 5, num_ground_tiles > 26))
 
     return true, false
+
+
+def count_enemy_tiles(joined_frame):
+    level = np.argmax(joined_frame[:, :, 9:-9, 2:-2].data.cpu().numpy(), axis=1)
+    num_total_enemies = np.sum(np.sum(np.logical_or(level == 5, level == 11, level == 12),axis=1),axis=1)
+    
+    fitness = num_total_enemies
+    true = np.where(fitness>=2)
+    false = np.where(fitness < 2)
+
+    return true, false

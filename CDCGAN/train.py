@@ -30,7 +30,7 @@ def parse_arguments():
     parser.add_argument("--batchSize", type=int,
                         default=32, help="input batch size")
     parser.add_argument(
-        "--niter", type=int, default=10000, help="number of epochs to train for"
+        "--niter", type=int, default=20000, help="number of epochs to train for"
     )
     parser.add_argument(
         "--lrD",
@@ -160,6 +160,7 @@ def train(
         optimizerG = optim.RMSprop(netG.parameters(), lr=opt.lrG)
 
     gen_iterations = 0
+    loss_value = []
     for epoch in range(opt.niter):
 
         #! data_iter = iter(dataloader)
@@ -298,6 +299,11 @@ def train(
                 )
             )
 
+            loss_row = torch.tensor([epoch,errD.data[0],errG.data[0],errD_real.data[0],errD_fake.data[0]])
+            if len(loss_value) ==0:
+                loss_value = loss_row.numpy()
+            else:
+                loss_value = np.vstack((loss_value,loss_row.numpy()))
             # np.savetxt("Loss_D.csv", np.asarray(errD.data[0]), delimiter = ",")
             # np.savetxt("Loss_G.csv", np.asarray(errG.data[0]), delimiter = ",")
             # np.savetxt("Loss_D_real.csv", np.asarray(errD_real.data[0]), delimiter = ",")
@@ -326,14 +332,14 @@ def train(
                 im = combine_images(tiles2image(
                     np.argmax(im, axis=1), z_dims=13))  # why argmax?
                 plt.imsave(
-                    "{0}/mario_fake_samples_1_{1}.png".format(
+                    "{0}/mario_fake_samples_012567_{1}.png".format(
                         opt.experiment, gen_iterations
                     ),
                     im,
                 )
                 torch.save(
                     netG.state_dict(),
-                    "{0}/netG_epoch_condition_1_{1}_{2}_{3}.pth".format(
+                    "{0}/netG_epoch_condition_012567_{1}_{2}_{3}.pth".format(
                         opt.experiment, gen_iterations, opt.problem, opt.nz
                     ),
                 )
@@ -341,13 +347,13 @@ def train(
         # do checkpointing
         # torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
         # torch.save(netD.state_dict(), '{0}/netD_epoch_{1}.pth'.format(opt.experiment, epoch))
-
+    np.save('loss_data_012567.npy', loss_value)
 
 def main():
     opt = parse_arguments()
 
     if opt.experiment is None:
-        opt.experiment = "samples"
+        opt.experiment = "samples_012567"
     os.system("mkdir {0}".format(opt.experiment))
 
     opt.manualSeed = random.randint(1, 10000)  # fix seed
@@ -363,7 +369,7 @@ def main():
     map_size = 32
     data = MarioDataset()
     # channels on which generator is conditioned on
-    conditional_channels = [0,1,3,4,5,6,7,10,11,12]
+    conditional_channels = [0,1,2,5,6,7]
 
     ngpu = int(opt.ngpu)
     nz = int(opt.nz)
