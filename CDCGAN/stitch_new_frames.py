@@ -41,28 +41,14 @@ if __name__ == "__main__":
         )
 
 
-    noise_params = (
-        np.load("underground_params.npy"),
-        #np.load("best_sky_tile_member.npy"),
-        np.load("best_sky_tile_member.npy"),
-        np.zeros((196,)),
-    )
-
     features = ["More Sky Tiles", "Underground", "More Enemies", "Random"]
-    file_name = "my_GAN_level"
+    file_name = "my_GAN_level_random"
     while True:
         selection = SelectionMenu.get_selection(
             features, title="Select the features you would like to generate:",
         )
-        var = 0.5
+        var = 0.2
         level_gen.conditional_channels = conditional_channels
-        # if selection != 3:
-        #     level_gen.conditional_channels = conditional_channels
-        # else:
-        #     level_gen.conditional_channels = [0,1,6,7]
-        #     level_gen.netG = Generator(
-        #          latent_size=(len(level_gen.conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
-        #          )
         try:
             model = model_opt[selection]
             noise = np.zeros((196,))

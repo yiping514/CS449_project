@@ -114,7 +114,7 @@ if __name__ == "__main__":
         latent_size=(len(conditional_channels) + 1, 14, 14), out_size=(13, 32, 32)
     )
     netG.load_state_dict(torch.load(
-        "./trained_models/netG_epoch_condition_012567_sky_390000_0_32.pth"))
+        "./trained_models/netG_epoch_300000_0_32.pth"))
     # 300000
     mario_map = get_asset_map(game="mario")
     gen = GameImageGenerator(asset_map=mario_map)
